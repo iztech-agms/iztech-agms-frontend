@@ -38,7 +38,7 @@ export default function Login() {
     <>
       {/* Login Form */}
       <Box
-        display="flex"
+        display="flex "
         justifyContent="center"
         alignItems="center"
         minHeight="100vh"
