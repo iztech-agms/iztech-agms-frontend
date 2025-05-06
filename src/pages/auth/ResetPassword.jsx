@@ -16,9 +16,6 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleClickShowPassword = () => setShowPassword(!showPassword);
-  const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
-
   return (
     <Box
       display="flex"
@@ -46,7 +43,7 @@ export default function ResetPassword() {
               <InputAdornment position="end">
                 <IconButton
                   aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword}
+                  onClick={() => setShowPassword(!showPassword)}
                   edge="end"
                 >
                   {showPassword ? <Visibility /> : <VisibilityOff />}
@@ -67,7 +64,7 @@ export default function ResetPassword() {
               <InputAdornment position="end">
                 <IconButton
                   aria-label="toggle confirm password visibility"
-                  onClick={handleClickShowConfirmPassword}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   edge="end"
                 >
                   {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
