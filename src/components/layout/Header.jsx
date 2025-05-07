@@ -7,8 +7,20 @@ import {
   Button,
   Avatar,
 } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../../redux/user/userSlice';
 
 export default function Header() {
+  const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  }
+
   return (
     <AppBar 
       position="static" 
@@ -35,14 +47,14 @@ export default function Header() {
         {/* Right Side: User Information + Log Out */}
         <Box display="flex" alignItems="center" gap={2}>
           <Avatar sx={{ bgcolor: '#ccc', width: 40, height: 40, cursor: 'pointer'  }}>
-            S
+            {currentUser?.username?.charAt(0)}
           </Avatar>
           <Box display="flex" flexDirection="column" justifyContent="center">
             <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2}}>
-              Samet Hodaman
+              {currentUser?.username}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.2 }}>
-              Student
+              {currentUser?.role}
             </Typography>
           </Box>
           <Button 
@@ -56,6 +68,7 @@ export default function Header() {
                 backgroundColor: '#333'
               }
             }}
+            onClick={() => handleLogout()}
           >
             Log Out
           </Button>

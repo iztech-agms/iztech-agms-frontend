@@ -1,7 +1,10 @@
 import React from 'react';
 import { Button } from '@mui/material';
+import { useSelector } from 'react-redux';
 
 function StudentDashboard() {
+  const { currentUser } = useSelector((state) => state.user);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <p className="text-2xl font-bold text-gray-800">
