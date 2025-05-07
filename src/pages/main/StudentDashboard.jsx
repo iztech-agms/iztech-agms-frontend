@@ -21,7 +21,7 @@ function StudentDashboard() {
           <button className="bg-black text-white px-4 py-2 rounded text-sm hover:bg-gray-800">Download Exmatriculation Form</button>
         </div>
 
-        <div className="bg-white shadow p-4 rounded-xl md:col-span-2">
+        <div className="bg-white shadow p-4 rounded-xl md:col-span-1">
           <h2 className="text-lg font-semibold mb-1">Graduation Ceremony</h2>
           <p className="text-sm text-gray-700 mb-4">Ceremony Details: [Date, Time, Location]</p>
           <div className="flex gap-3">
