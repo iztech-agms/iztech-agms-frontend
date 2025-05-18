@@ -1,11 +1,14 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import './index.css'
 import ResetPassword from './pages/auth/ResetPassword'
 import StudentDashboard from './pages/main/StudentDashboard'
 import Layout from './components/layout'
+import { useSelector } from 'react-redux'
 
 function App() {
+  const token = useSelector((state) => state.user.token);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -19,6 +22,7 @@ function App() {
             </Layout>
           }
         />
+        <Route path="*" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   )

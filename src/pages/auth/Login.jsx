@@ -23,6 +23,7 @@ import { keyframes } from '@mui/system';
 import { useDispatch } from 'react-redux';
 import { loadingStart, loadingEnd, loginStart, loginSuccess, loginFailure } from '../../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const fadeIn = keyframes`
   from {
@@ -36,6 +37,7 @@ const fadeIn = keyframes`
 `;
 
 export default function Login() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -168,7 +170,7 @@ export default function Login() {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            Log In to AGMS
+            {t('log_in_to_gms')}
           </Typography>
 
           <TextField
@@ -235,7 +237,7 @@ export default function Login() {
             }}
             onClick={handleLogin}
           >
-            Log in
+            {t('sign_in')}
           </Button>
 
           <Typography align="center" mt={2}>
@@ -252,7 +254,7 @@ export default function Login() {
                 transition: 'color 0.3s ease',
               }}
             >
-              Forgot Password?
+              {t('forgot_password')}
             </Link>
           </Typography>
         </Paper>
@@ -286,7 +288,7 @@ export default function Login() {
       >
         <DialogTitle>
           <Typography variant="h6" fontWeight="bold">
-            Forgot Password
+            {t('forgot_password')}
           </Typography>
           <IconButton
             aria-label="close"
@@ -307,7 +309,7 @@ export default function Login() {
 
         <DialogContent dividers>
           <Typography fontSize={14} mb={2} color="text.secondary">
-            Enter your email address and we'll send you a link to reset your password.
+            {t('enter_email_address_description')}
           </Typography>
           <TextField
             autoFocus
@@ -364,7 +366,7 @@ export default function Login() {
             }}
             onClick={isVerificationCodeSent ? handleApplyClick : handleResetClick}
           >
-            {isVerificationCodeSent ? 'Apply' : 'Reset Password'}
+            {isVerificationCodeSent ? t('apply') : t('reset_your_password')}
           </Button>
         </DialogActions>
       </Dialog>

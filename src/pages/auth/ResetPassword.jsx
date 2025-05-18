@@ -67,10 +67,10 @@ export default function ResetPassword() {
       >
         <Paper elevation={3} sx={{ p: 4, width: 400 }}>
           <Typography variant="h6" fontWeight="bold" mb={1}>
-            Reset Your Password
+            {t('reset_your_password')}
           </Typography>
           <Typography variant="body2" color="textSecondary" mb={3}>
-            Enter your new password below
+            {t('enter_your_new_password_below')}
           </Typography>
 
           <TextField
@@ -129,7 +129,7 @@ export default function ResetPassword() {
             sx={{ mt: 3, bgcolor: 'black', ':hover': { bgcolor: '#333' } }}
             onClick={handleResetPassword}
           >
-            Reset Password
+            {t('reset_password')}
           </Button>
         </Paper>
       </Box>

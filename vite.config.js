@@ -8,4 +8,8 @@ export default defineConfig({
     react(), 
     tailwindcss()
   ],
+  server: {
+    host: '0.0.0.0', // tüm arayüzlerde dinler
+    port: 5173,      // istersen farklı bir port da verebilirsin
+  }
 })

@@ -1,0 +1,15 @@
+{
+  "apply": "Uygula",
+  "login": "Giriş Yap",
+  "home": "Ana Sayfa",
+  "explore": "Keşfet",
+  "enter_email_address_description": "Email adresinizi girin ve şifrenizi sıfırlamak için bir bağlantı göndereceğiz.",
+  "myLists": "Listelerim",
+  "community": "Topluluk",
+  "sign_in": "Giriş Yap",
+  "log_in_to_gms": "GMS'ye Giriş Yap",
+  "forgot_password": "Şifremi Unuttum",
+  "reset_your_password": "Şifrenizi Sıfırlayın",
+  "enter_your_new_password_below": "Yeni şifrenizi aşağıya yazın",
+  "reset_password": "Şifreyi Sıfırla"
+}
