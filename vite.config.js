@@ -11,5 +11,12 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // tüm arayüzlerde dinler
     port: 5173,      // istersen farklı bir port da verebilirsin
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })

@@ -1,5 +1,5 @@
 // src/pages/auth/Login.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -15,15 +15,19 @@ import {
   InputAdornment,
   Snackbar,
   Alert,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
+import LanguageIcon from '@mui/icons-material/Language';
 import { keyframes } from '@mui/system';
-import { useDispatch } from 'react-redux';
-import { loadingStart, loadingEnd, loginStart, loginSuccess, loginFailure } from '../../redux/user/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { loadingStart, loadingEnd, loginStart, loginSuccess, loginFailure, setUser, setAccessToken } from '../../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { api } from '../../api/api';
 
 const fadeIn = keyframes`
   from {
@@ -37,14 +41,14 @@ const fadeIn = keyframes`
 `;
 
 export default function Login() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [forgotOpen, setForgotOpen] = useState(false);
   const [isVerificationCodeSent, setIsVerificationCodeSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [loginCredentials, setLoginCredentials] = useState({
-    email: '',
+    username: '',
     password: '',
   });
   const [snackbar, setSnackbar] = useState({
@@ -52,25 +56,52 @@ export default function Login() {
     message: '',
     severity: 'success'
   });
+  const [anchorEl, setAnchorEl] = useState(null);
+  
+  const user = useSelector(state => state.user)
+  useEffect(() => {
+    if (user?.access_token) {
+      return navigate('/dashboard')
+    }
+  }, [])
 
   const handleLogin = async () => {
     const { ...userCredentials } = loginCredentials;
     try {
       dispatch(loginStart());
-      // Wait 2 seconds
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // Check if user credentials are correct
-      if (userCredentials.email === 'samethodaman@std.iyte.edu.tr' && userCredentials.password === 'samet123') {
+
+      const res = await api.post('/auth/login', userCredentials)
+      console.log(res?.data)
+      if (res?.data?.status?.code !== "0") {
+        setSnackbar({
+          open: true,
+          message: res?.data?.message,
+          severity: 'error'
+        })
+      } else {
         setSnackbar({
           open: true,
           message: 'Login successful! Redirecting...',
           severity: 'success'
-        });
+        })
+        console.log(res?.data?.user)
+        dispatch(setUser(res?.data?.user))
+        dispatch(setAccessToken(res?.data?.token))
+
+        // Wait 0.5 seconds
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (res?.data?.user?.role?.toLowerCase() === 'student') {
+          navigate('/dashboard');
+        } else {
+          navigate('/user-dashboard');
+        }
+      }
+      
+      /*
         // Wait 0.5 seconds
         await new Promise(resolve => setTimeout(resolve, 500));
         const dummyUser = { username: 'Samet Hodaman', email: 'samethodaman@std.iyte.edu.tr', role: 'Student' };
-        dispatch(loginSuccess(dummyUser));
-        navigate('/dashboard');
+        
       } else {
         setSnackbar({
           open: true,
@@ -78,6 +109,7 @@ export default function Login() {
           severity: 'error'
         });
       }
+      */
     } catch (error) {
       dispatch(loginFailure());
       console.error('Login error:', error);
@@ -134,8 +166,52 @@ export default function Login() {
     }
   };
 
+  const handleLanguageClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleLanguageClose = () => {
+    setAnchorEl(null);
+  };
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    handleLanguageClose();
+  };
+
   return (
     <>
+      {/* Language Selector */}
+      <IconButton
+        onClick={handleLanguageClick}
+        sx={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          color: 'black',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+          },
+        }}
+      >
+        <LanguageIcon />
+      </IconButton>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleLanguageClose}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <MenuItem onClick={() => changeLanguage('tr')}>Türkçe</MenuItem>
+        <MenuItem onClick={() => changeLanguage('en')}>English</MenuItem>
+      </Menu>
+
       {/* Login Form */}
       <Box
         display="flex "
@@ -175,8 +251,8 @@ export default function Login() {
 
           <TextField
             fullWidth
-            label="Email"
-            placeholder="Enter your @iyte.edu.tr email"
+            label={t('student_number')}
+            placeholder={t('enter_your_student_number')}
             margin="normal"
             InputProps={{
               startAdornment: (
@@ -192,14 +268,14 @@ export default function Login() {
                 },
               },
             }}
-            onChange={(e) => setLoginCredentials({ ...loginCredentials, email: e.target.value })}
+            onChange={(e) => setLoginCredentials({ ...loginCredentials, username: e.target.value })}
             onKeyPress={handleKeyPress}
           />
           <TextField
             fullWidth
-            label="Password"
+            label={t('password')}
             type="password"
-            placeholder="Enter your password"
+            placeholder={t('enter_your_password')}
             margin="normal"
             InputProps={{
               startAdornment: (

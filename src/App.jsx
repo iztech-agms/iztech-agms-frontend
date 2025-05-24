@@ -5,6 +5,8 @@ import ResetPassword from './pages/auth/ResetPassword'
 import StudentDashboard from './pages/main/StudentDashboard'
 import Layout from './components/layout'
 import { useSelector } from 'react-redux'
+import PrivateRoutes from './privateRoutes/privateRoutes'
+import UserDashboard from './pages/main/UserDashboard'
 
 function App() {
   const token = useSelector((state) => state.user.token);
@@ -14,14 +16,13 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route
-          path="/dashboard"
-          element={
-            <Layout>
-              <StudentDashboard />
-            </Layout>
-          }
-        />
+        <Route path="/" element={<Layout />}>
+          <Route element={<PrivateRoutes />}>
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/user-dashboard" element={<UserDashboard />} />
+          </Route>
+        </Route>
         <Route path="*" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>

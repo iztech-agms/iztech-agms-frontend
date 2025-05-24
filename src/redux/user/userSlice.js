@@ -29,6 +29,9 @@ const userSlice = createSlice({
       state.isLoggedIn = false
       state.loading = false
     },
+    setUser: (state, action) => {
+      state.currentUser = action.payload
+    },
     logout: (state) => {
       state.isLoggedIn = false
       state.access_token = null
@@ -51,6 +54,7 @@ export const {
   loginSuccess,
   loginFailure,
   logout,
+  setUser,
   setAccessToken,
   clearAccessToken,
 } = userSlice.actions

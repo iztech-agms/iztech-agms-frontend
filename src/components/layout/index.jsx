@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import Header from './Header';
 import Footer from './Footer';
+import { Outlet } from 'react-router-dom';
 
 export default function Layout({ children }) {
   return (
@@ -11,7 +12,7 @@ export default function Layout({ children }) {
 
       {/* Main Content */}
       <Box flexGrow={1} p={0}>
-        {children}
+        <Outlet />
       </Box>
 
       {/* Bottom Menu */}
