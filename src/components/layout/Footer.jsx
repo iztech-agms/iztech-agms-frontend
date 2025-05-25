@@ -15,7 +15,7 @@ export default function Footer() {
       }}
     >
       <Typography variant="body2" color="textSecondary">
-        © {new Date().getFullYear()} AGMS – IZTECH Graduation Management System
+        © {new Date().getFullYear()} GMS – IZTECH Graduation Management System
       </Typography>
     </Box>
   );

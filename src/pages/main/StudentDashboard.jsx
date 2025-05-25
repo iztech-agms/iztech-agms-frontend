@@ -15,6 +15,8 @@ import {
   Grid,
   Paper,
   Tooltip,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -29,11 +31,15 @@ import EventIcon from '@mui/icons-material/Event';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 
 function StudentDashboard() {
   const { currentUser } = useSelector((state) => state.user);
   const { t } = useTranslation();
   const [openGraduationModal, setOpenGraduationModal] = useState(false);
+  const [studentsDetails, setStudentsDetails] = useState({});
+  const [graduationYearStruct, setGraduationYearStruct] = useState(null);
   const [graduationStatus, setGraduationStatus] = useState({
     id: 0,
     student_id: 0,
@@ -51,6 +57,36 @@ function StudentDashboard() {
     semester: '',
     description: ''
   });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  const fetchGradYearStruct = async () => {
+    const response = await api.post(`/graduation-year/get`);
+    if (response?.data?.status?.code === "0") {
+      const gradYearStruct = response?.data?.graduation_years[0];
+      setGraduationYearStruct(gradYearStruct);
+    }
+  }
+
+  useEffect(() => {
+    const fetchStudentsDetails = async () => {
+      try {
+        const response = await api.post(`/student-detailed/get/id/${currentUser?.id}`);
+        if (response?.data?.status?.code === "0") {
+          setStudentsDetails(response?.data?.students[0]);
+        } else {
+          console.error('Error fetching students details:', response?.data?.status?.message);
+        }
+      } catch (error) {
+        console.error('Error fetching students details:', error);
+      }
+    }
+    fetchStudentsDetails();
+    fetchGradYearStruct();
+  }, []);
 
   // Örnek öğrenci bilgileri (gerçek uygulamada API'den gelecek)
   const studentInfo = {
@@ -63,33 +99,39 @@ function StudentDashboard() {
     enrollmentYear: "2020",
     expectedGraduation: "2024"
   };
+  const fetchStudentInfo = async () => {
+    try {
+      const response = await api.post(`/graduation-status/std/` + currentUser?.id);
+      if (response?.data?.status?.code === "0") {
+        setGraduationStatus(response?.data?.graduation_status?.[0]);
+      } else if (response?.data?.code === "100") {
+        // Deprecated
+        console.log("Application is not applied yet");
+        // setGraduationStatus(response?.data?.graduation_status?.[0]);
+      } else {
+        console.error('Error fetching student info:', response?.data?.status?.message);
+      }
+    } catch (error) {
+      console.error('Error fetching student info:', error);
+    }
+  }
 
   useEffect(() => {
-    const fetchStudentInfo = async () => {
-      try {
-        const response = await api.post(`/graduation-status/std/` + currentUser?.id);
-        console.log('Response:', response);
-        if (response?.data?.status?.code === "0") {
-          setGraduationStatus(response?.data?.graduation_status?.[0]);
-        } else if (response?.data?.code === "100") {
-          console.log("Application is not applied yet");
-          // setGraduationStatus(response?.data?.graduation_status?.[0]);
-        } else {
-          console.error('Error fetching student info:', response?.data?.status?.message);
-        }
-      } catch (error) {
-        console.error('Error fetching student info:', error);
-      }
-    }
     fetchStudentInfo();
   }, [currentUser?.username]);
 
   const handleGraduationSubmit = async () => {
     try {
-      const response = await api.post('/graduation/apply', graduationForm);
+      const response = await api.post('/student/graduation-request/apply', currentUser?.id);
+      console.log(response);
       if (response?.data?.code === "0") {
         setOpenGraduationModal(false);
-        // Başarılı mesajı göster
+        setSnackbar({
+          open: true,
+          message: t("graduation_application_submitted"),
+          severity: 'success'
+        });
+        fetchStudentInfo();
       }
     } catch (error) {
       console.error('Error submitting graduation application:', error);
@@ -121,7 +163,7 @@ function StudentDashboard() {
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">{t("department")}</Typography>
-                <Typography variant="body1">{currentUser?.department}</Typography>
+                <Typography variant="body1">{studentsDetails?.department_name}</Typography>
               </Box>
             </Box>
           </Grid>
@@ -133,11 +175,11 @@ function StudentDashboard() {
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">{t('advisor')}</Typography>
-                <Typography variant="body1">{currentUser?.advisor}</Typography>
+                <Typography variant="body1">{studentsDetails?.advisor?.first_name} {studentsDetails?.advisor?.last_name}</Typography>
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">{t("enrollment_year")}</Typography>
-                <Typography variant="body1">{currentUser?.enrollmentYear}</Typography>
+                <Typography variant="body1">{studentsDetails?.student?.enrollment_year}</Typography>
               </Box>
             </Box>
           </Grid>
@@ -145,39 +187,38 @@ function StudentDashboard() {
       </Paper>
 
       {/* Graduation Status */}
-      {graduationStatus?.is_system_confirmed === 0 ? (
-        <>
-          <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-            <Typography variant="h6" fontWeight="bold" mb={3}>
-              {t("graduation_application_information")}
-            </Typography>
+      {graduationStatus?.is_system_confirmed === 0 ? (<>
+        <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+          <Typography variant="h6" fontWeight="bold" mb={3}>
+            {t("graduation_application_information")}
+          </Typography>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" mb={1}>
-                  {t("semester")}: {graduationStatus?.student_semester}
-                </Typography>
-                <Typography variant="subtitle2" color="text.secondary" mb={1}>
-                  {t("gpa")}: {graduationStatus?.student_gpa}
-                </Typography>
-                <Typography variant="subtitle2" color="text.secondary" mb={1}>
-                  {t("credits")}: {graduationStatus?.student_credits}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  onClick={() => setOpenGraduationModal(true)}
-                >
-                  {t("apply_for_graduation")}
-                </Button>
-              </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" mb={1}>
+                {t("semester")}: {graduationStatus?.student_semester}
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary" mb={1}>
+                {t("gpa")}: {graduationStatus?.student_gpa}
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary" mb={1}>
+                {t("ects")}: {graduationStatus?.student_ects}
+              </Typography>
             </Box>
-          </Paper>
-        </>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={() => setOpenGraduationModal(true)}
+              >
+                {t("apply_for_graduation")}
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
+      </>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white shadow p-4 rounded-xl">
@@ -284,25 +325,44 @@ function StudentDashboard() {
                   {t("gpa")}: {graduationStatus.student_gpa}
                 </Typography>
               </div>
+              {graduationYearStruct && new Date(graduationYearStruct?.end_date) > new Date() && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        backgroundColor: 'success.light',
+                        color: 'success.contrastText',
+                        px: 2,
+                        py: 1,
+                        borderRadius: 1,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      <DoneAllIcon fontSize="small" />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 500,
+                          letterSpacing: '0.5px'
+                        }}
+                      >
+                        {t("graduation_process_completed")}
+                      </Typography>
+                    </Box>
+                  </div>
+                </div>
+              )}
             </div>
-          </div >
-
-        </div >
-      )}
-
-      < div className="bg-white shadow p-4 rounded-xl md:col-span-1" >
-        <h2 className="text-lg font-semibold mb-1">Graduation Ceremony</h2>
-        <p className="text-sm text-gray-700 mb-4">Ceremony Details: [Date, Time, Location]</p>
-        <div className="flex gap-3">
-          <Button variant="contained" sx={{ backgroundColor: '#000000', color: '#fff' }}>Attend Ceremony</Button>
-          <Button variant="outlined" color="inherit">Not Attend Ceremony</Button>
+          </div>
         </div>
-      </div >
-    </div >
-
+      )}
+    </div>
 
     {/* Mezuniyet Başvurusu Modal */}
-    < Dialog
+    <Dialog
       open={openGraduationModal}
       onClose={() => setOpenGraduationModal(false)}
       maxWidth="lg"
@@ -310,7 +370,7 @@ function StudentDashboard() {
     >
       <DialogTitle>
         <Typography variant="h6" fontWeight="bold">
-          {t("graduation_application_information")}
+          {t("apply_for_graduation")}
         </Typography>
       </DialogTitle>
       <DialogContent>
@@ -333,35 +393,35 @@ function StudentDashboard() {
             <SchoolIcon color="primary" sx={{ fontSize: 20 }} />
             <Box>
               <Typography variant="subtitle2" color="text.secondary">{t("department")}</Typography>
-              <Typography variant="body2">{studentInfo.department}</Typography>
+              <Typography variant="body2">{studentsDetails?.department_name}</Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <GradeIcon color="primary" sx={{ fontSize: 20 }} />
             <Box>
               <Typography variant="subtitle2" color="text.secondary">{t("gpa")}</Typography>
-              <Typography variant="body2">{studentInfo.gpa}</Typography>
+              <Typography variant="body2">{graduationStatus?.student_gpa}</Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <SupervisorAccountIcon color="primary" sx={{ fontSize: 20 }} />
             <Box>
               <Typography variant="subtitle2" color="text.secondary">{t("advisor")}</Typography>
-              <Typography variant="body2">{studentInfo.advisor}</Typography>
+              <Typography variant="body2">{studentsDetails?.advisor?.first_name} {studentsDetails?.advisor?.last_name}</Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CalendarTodayIcon color="primary" sx={{ fontSize: 20 }} />
             <Box>
               <Typography variant="subtitle2" color="text.secondary">{t("enrollment_year")}</Typography>
-              <Typography variant="body2">{studentInfo.enrollmentYear}</Typography>
+              <Typography variant="body2">{studentsDetails?.student?.enrollment_year}</Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <EventIcon color="primary" sx={{ fontSize: 20 }} />
             <Box>
               <Typography variant="subtitle2" color="text.secondary">{t("expected_graduation")}</Typography>
-              <Typography variant="body2">{studentInfo.expectedGraduation}</Typography>
+              <Typography variant="body2">{studentsDetails?.graduation_status?.year}</Typography>
             </Box>
           </Box>
         </Box>
@@ -378,10 +438,21 @@ function StudentDashboard() {
           onClick={handleGraduationSubmit}
           sx={{ textTransform: 'none' }}
         >
-          {t("apply_for_graduation")}
+          {t("apply")}
         </Button>
       </DialogActions>
     </Dialog>
+
+    <Snackbar
+      open={snackbar.open}
+      autoHideDuration={6000}
+      onClose={() => setSnackbar({ ...snackbar, open: false })}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+    >
+      <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+        {snackbar.message}
+      </Alert>
+    </Snackbar>
   </>
 
   );

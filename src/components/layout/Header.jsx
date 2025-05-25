@@ -16,17 +16,20 @@ import {
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import LanguageIcon from '@mui/icons-material/Language';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/api';
 import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 export default function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const currentUser = useSelector((state) => state.user);
+  const { t, i18n } = useTranslation();
+  const { currentUser } = useSelector((state) => state.user);
   const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
+  const [languageAnchorEl, setLanguageAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
   const handleLogout = () => {
@@ -44,7 +47,7 @@ export default function Header() {
 
   const handleDeleteNotification = async (event, notificationId) => {
     event.stopPropagation();
-    const res = await api.post('/notifications/delete/id/'+notificationId);
+    const res = await api.post('/notifications/delete/id/' + notificationId);
     if (res?.data?.code === "0") {
       fetchNotifications();
     }
@@ -53,7 +56,7 @@ export default function Header() {
   const handleMarkAsRead = async (event, notificationId) => {
     event.stopPropagation();
 
-    const {...notification} = notifications.find(notification => notification?.id === notificationId);
+    const { ...notification } = notifications.find(notification => notification?.id === notificationId);
     notification.is_notification_read = true;
     const res = await api.post('/notifications/update', notification);
     if (res?.data?.code === "0") {
@@ -63,10 +66,31 @@ export default function Header() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.post('/notifications/get/user-id/'+currentUser?.currentUser?.id);
+      const response = await api.post('/notifications/get/user-id/' + currentUser?.id);
       setNotifications(response?.data?.notifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const handleLanguageClick = (event) => {
+    setLanguageAnchorEl(event.currentTarget);
+  };
+
+  const handleLanguageClose = () => {
+    setLanguageAnchorEl(null);
+  };
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    handleLanguageClose();
+  };
+
+  const handleLogoClick = () => {
+    if (currentUser?.role === 'student') {
+      navigate('/student-dashboard');
+    } else {
+      navigate('/user-dashboard');
     }
   };
 
@@ -75,9 +99,9 @@ export default function Header() {
   }, [currentUser]);
 
   return (
-    <AppBar 
-      position="static" 
-      color="default" 
+    <AppBar
+      position="static"
+      color="default"
       elevation={3}
       sx={{
         borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
@@ -86,14 +110,24 @@ export default function Header() {
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         {/* Left Side: Logo + Title */}
-        <Box display="flex" alignItems="center">
+        <Box 
+          display="flex" 
+          alignItems="center" 
+          onClick={handleLogoClick}
+          sx={{ 
+            cursor: 'pointer',
+            '&:hover': {
+              opacity: 0.8
+            }
+          }}
+        >
           <img
             src="/assets/img/iyte_logo.png"
             alt="IYTE Logo"
             style={{ height: 32, marginRight: 10 }}
           />
           <Typography variant="h6" fontWeight="bold">
-            AGMS
+            GMS
           </Typography>
         </Box>
 
@@ -143,10 +177,10 @@ export default function Header() {
                   </Typography>
                 </Box>
                 <Box>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     onClick={(e) => handleMarkAsRead(e, notification.id)}
-                    sx={{ 
+                    sx={{
                       mr: 0.5,
                       color: 'text.secondary',
                       '&:hover': {
@@ -159,8 +193,8 @@ export default function Header() {
                   >
                     <DoneAllIcon fontSize="small" />
                   </IconButton>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     onClick={(e) => handleDeleteNotification(e, notification.id)}
                     sx={{
                       color: 'text.secondary',
@@ -177,15 +211,15 @@ export default function Header() {
                 </Box>
               </MenuItem>
             )) : (
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
+              <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
                 py: 3,
                 px: 2
               }}>
-                <NotificationsIcon sx={{ 
-                  fontSize: 48, 
+                <NotificationsIcon sx={{
+                  fontSize: 48,
                   color: 'text.secondary',
                   opacity: 0.5,
                   mb: 1
@@ -200,20 +234,56 @@ export default function Header() {
             )}
           </Menu>
 
-          <Avatar sx={{ bgcolor: '#ccc', width: 40, height: 40, cursor: 'pointer'  }}>
-            {currentUser?.username?.charAt(0)}
+          {/* Language Selector */}
+          <Box display="flex" alignItems="center" gap={1}>
+            <IconButton onClick={handleLanguageClick}>
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <LanguageIcon fontSize="small" />
+                <Typography variant="body2">{i18n.language.toUpperCase()}</Typography>
+              </Box>
+            </IconButton>
+            <Menu
+              anchorEl={languageAnchorEl}
+              open={Boolean(languageAnchorEl)}
+              onClose={handleLanguageClose}
+              PaperProps={{
+                sx: {
+                  mt: 1.5,
+                  minWidth: 120,
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                },
+              }}
+            >
+              <MenuItem onClick={() => handleLanguageChange('en')} selected={i18n.language === 'en'}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="body2">🇺🇸</Typography>
+                  <Typography variant="body2">English</Typography>
+                </Box>
+              </MenuItem>
+              <MenuItem onClick={() => handleLanguageChange('tr')} selected={i18n.language === 'tr'}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="body2">🇹🇷</Typography>
+                  <Typography variant="body2">Türkçe</Typography>
+                </Box>
+              </MenuItem>
+            </Menu>
+          </Box>
+
+          <Avatar sx={{ bgcolor: '#ccc', width: 40, height: 40, cursor: 'pointer' }}>
+            {currentUser?.first_name?.charAt(0)}{currentUser?.last_name?.charAt(0)}
           </Avatar>
           <Box display="flex" flexDirection="column" justifyContent="center">
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2}}>
-              {currentUser?.currentUser?.user?.first_name} {currentUser?.currentUser?.user?.last_name}
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+              {currentUser?.first_name} {currentUser?.last_name}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.2 }}>
-              {currentUser?.role}
+              {t(currentUser?.role)}
             </Typography>
           </Box>
-          <Button 
-            variant="contained" 
-            sx={{ 
+          <Button
+            variant="contained"
+            sx={{
               ml: 1,
               textTransform: 'none',
               fontWeight: 500,

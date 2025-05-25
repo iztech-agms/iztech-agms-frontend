@@ -57,7 +57,7 @@ export default function Login() {
     severity: 'success'
   });
   const [anchorEl, setAnchorEl] = useState(null);
-  
+
   const user = useSelector(state => state.user)
   useEffect(() => {
     if (user?.access_token) {
@@ -96,20 +96,7 @@ export default function Login() {
           navigate('/user-dashboard');
         }
       }
-      
-      /*
-        // Wait 0.5 seconds
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const dummyUser = { username: 'Samet Hodaman', email: 'samethodaman@std.iyte.edu.tr', role: 'Student' };
-        
-      } else {
-        setSnackbar({
-          open: true,
-          message: 'Invalid email or password!',
-          severity: 'error'
-        });
-      }
-      */
+
     } catch (error) {
       dispatch(loginFailure());
       console.error('Login error:', error);
@@ -233,6 +220,14 @@ export default function Login() {
             backdropFilter: 'blur(10px)',
           }}
         >
+          <Box textAlign="center" mb={2}>
+            <img
+              src="/assets/img/iyte_logo.png"
+              alt="GMS Logo"
+              style={{ display: 'block', margin: '0 auto 10px', width: 180, height: 180 }}
+            />
+          </Box>
+
           <Typography
             variant="h5"
             align="center"
@@ -316,6 +311,7 @@ export default function Login() {
             {t('sign_in')}
           </Button>
 
+          {/*
           <Typography align="center" mt={2}>
             <Link
               component="button"
@@ -333,6 +329,7 @@ export default function Login() {
               {t('forgot_password')}
             </Link>
           </Typography>
+          */}
         </Paper>
       </Box>
 
